@@ -4,7 +4,7 @@ services:
   dicomweb:
     build: .
     ports:
-      - ":5985"
+      - "5985"
     command: npm start
     depends_on:
       - couchdb
@@ -15,7 +15,7 @@ services:
   dicomlistener:
     image: darthunix/dcmtk
     volumes:
-      - /customer/${CUSTOMER}/uploads:/dcmfiles
+      - /Users/sbhavani/customer/${CUSTOMER}/uploads:/dcmfiles
     ports:
       - "104"
     command: storescp 104 -v -aet ALARACARE --output-directory /dcmfiles -fe .dcm +xa
@@ -31,7 +31,7 @@ services:
       test: ["CMD", "curl", "-X", "PUT", "http://db:5984/_users"]
       interval: 90s
     volumes:
-      - /home/ubuntu/demo-server/demo_couchdb_data:/opt/couchdb/data
+      - /Users/sbhavani/demo_couchdb_data:/opt/couchdb/data
     networks:
       alaracare:
         aliases:
@@ -39,12 +39,12 @@ services:
   minio:
     image: minio/minio
     volumes:
-      - /customer/${CUSTOMER}:/data
+      - /Users/sbhavani/customer/${CUSTOMER}:/data
     ports:
-      - ":9000"
+      - "9000"
     environment:
-      MINIO_ACCESS_KEY: admin
-      MINIO_SECRET_KEY: alaracare
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
     command: server /data
     networks:
       - alaracare
