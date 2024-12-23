@@ -1,1 +1,3 @@
-dicomweb-server/
+*.dcm
+customer/
+demo_couchdb_data/

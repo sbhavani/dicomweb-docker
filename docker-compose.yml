@@ -1,53 +1,73 @@
-version: "3"
-
 services:
   dicomweb:
     build: .
     ports:
-      - "5985"
+      - "8080:5985"
     command: npm start
     depends_on:
-      - couchdb
+      couchdb:
+        condition: service_healthy
     networks:
-      alaracare:
+      intelpixel:
         aliases:
           - dicom
   dicomlistener:
-    image: darthunix/dcmtk
+    image: darthunix/dcmtk:latest
     volumes:
-      - /Users/sbhavani/customer/${CUSTOMER}/uploads:/dcmfiles
+      - ./customer/${CUSTOMER}/uploads:/dcmfiles
     ports:
-      - "104"
-    command: storescp 104 -v -aet ALARACARE --output-directory /dcmfiles -fe .dcm +xa
+      - "32773:104"
+    command: storescp 104 -v -aet INTELPIXEL --output-directory /dcmfiles -fe .dcm +xa
     networks:
-      - alaracare
+      - intelpixel
     depends_on:
       - minio
   couchdb:
-    image: apache/couchdb:2
+    image: couchdb:3.3
     expose:
       - "5984"
+    environment:
+      - COUCHDB_USER=${COUCHDB_USER:-admin}
+      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-password}
+    command: >
+      sh -c "
+        tini -- /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
+        sleep 15 &&
+        curl -X PUT http://${COUCHDB_USER:-admin}:${COUCHDB_PASSWORD:-password}@localhost:5984/_users &&
+        curl -X PUT http://${COUCHDB_USER:-admin}:${COUCHDB_PASSWORD:-password}@localhost:5984/_replicator &&
+        curl -X PUT http://${COUCHDB_USER:-admin}:${COUCHDB_PASSWORD:-password}@localhost:5984/_global_changes &&
+        wait
+      "
     healthcheck:
-      test: ["CMD", "curl", "-X", "PUT", "http://db:5984/_users"]
-      interval: 90s
+      test: ["CMD", "curl", "-f", "http://localhost:5984"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     volumes:
-      - /Users/sbhavani/demo_couchdb_data:/opt/couchdb/data
+      - ./demo_couchdb_data:/opt/couchdb/data
     networks:
-      alaracare:
+      intelpixel:
         aliases:
           - db
   minio:
-    image: minio/minio
+    image: quay.io/minio/minio:latest
     volumes:
-      - /Users/sbhavani/customer/${CUSTOMER}:/data
+      - ./customer/${CUSTOMER}:/data
     ports:
-      - "9000"
+      - "9000:9000"
+      - "9001:9001"
     environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-    command: server /data
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
     networks:
-      - alaracare
+      - intelpixel
 
 networks:
-  alaracare:
+  intelpixel:
+    name: intelpixel
