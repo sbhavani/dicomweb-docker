@@ -16,8 +16,10 @@ The architecture provides a scalable DICOM management system with clear separati
 We test with a Python implementation dicomweb_client.
 
 3. View the file in the MinIO web interface
+```http://localhost:9001/```
 
 4. View the file in the OHIF viewer
+```http://localhost:8080/```
 
 ### Files to edit
 - development.js.example
@@ -57,8 +59,12 @@ We test with a Python implementation dicomweb_client.
 
 6. **Docker and Docker Compose**:
    - Multi-container setup with custom networking
-   - All services connected through 'intelpixel' network
+   - All services connected through single network
    - Volume mappings for persistent storage:
      - DICOM data: ./dicom_data:/app/data
      - Customer uploads: ./customer/${CUSTOMER}/uploads:/dcmfiles
      - MinIO storage: ./customer/${CUSTOMER}:/data
+
+## References
+- https://github.com/aws-samples/dicomweb-wado-qido-stow-serverless
+- https://github.com/knopkem/dicomweb-pacs
