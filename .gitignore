@@ -1,3 +1,4 @@
 *.dcm
 customer/
 demo_couchdb_data/
+dicom_data/

@@ -2,11 +2,22 @@ services:
   dicomweb:
     build: .
     ports:
-      - "8080:5985"
-    command: npm start
-    depends_on:
-      couchdb:
-        condition: service_healthy
+      - "${DICOM_WEB_PORT}:${DICOM_WEB_PORT}"  # OHIF viewer web interface
+      - "${DICOM_SERVER_PORT}:${DICOM_SERVER_PORT}"  # DICOM DIMSE port
+    command: npx dicomweb-pacs
+    environment:
+      - AE_TITLE=${DICOM_AE_TITLE}
+      - HOSTNAME=dicomweb
+      - DICOM_SERVER_PORT=${DICOM_SERVER_PORT}
+      - DICOM_SERVER_HOST=${DICOM_SERVER_HOST}
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "${DICOM_SERVER_PORT}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - ./dicom_data:/app/data  # For persistent storage
     networks:
       intelpixel:
         aliases:
@@ -22,33 +33,6 @@ services:
       - intelpixel
     depends_on:
       - minio
-  couchdb:
-    image: couchdb:3.3
-    expose:
-      - "5984"
-    environment:
-      - COUCHDB_USER=${COUCHDB_USER:-admin}
-      - COUCHDB_PASSWORD=${COUCHDB_PASSWORD:-password}
-    command: >
-      sh -c "
-        tini -- /docker-entrypoint.sh /opt/couchdb/bin/couchdb &
-        sleep 15 &&
-        curl -X PUT http://${COUCHDB_USER:-admin}:${COUCHDB_PASSWORD:-password}@localhost:5984/_users &&
-        curl -X PUT http://${COUCHDB_USER:-admin}:${COUCHDB_PASSWORD:-password}@localhost:5984/_replicator &&
-        curl -X PUT http://${COUCHDB_USER:-admin}:${COUCHDB_PASSWORD:-password}@localhost:5984/_global_changes &&
-        wait
-      "
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5984"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    volumes:
-      - ./demo_couchdb_data:/opt/couchdb/data
-    networks:
-      intelpixel:
-        aliases:
-          - db
   minio:
     image: quay.io/minio/minio:latest
     volumes:
