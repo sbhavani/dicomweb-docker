@@ -1,71 +1,75 @@
-# DICOM Web Server with SQLite and MinIO
+# DICOM Web Server with Orthanc, MinIO and OHIF Viewer
 
 ## Overview
 
-This project is a DICOM web server using Node.js, SQLite and MinIO to store and retrieve DICOM files.
+This project provides a complete DICOM web server setup using Orthanc as the DICOM server, MinIO for object storage, and OHIF for web-based DICOM viewing.
 
-The architecture provides a scalable DICOM management system with clear separation of concerns between file storage, metadata management, and DICOM communication protocols.
+The architecture provides a scalable DICOM management system with clear separation of concerns between file storage, metadata management, and DICOM/DICOMweb protocols.
 
 ## Quickstart
-1. Upload a DICOM file
-a. dcmtk:```dcmsend -v localhost 32773 -aec INTELPIXEL -aet ASTER +r +sd -nh test.dcm```
-b. orthanc:```curl -X POST -H "Content-Type: application/dicom" --data-binary @test.dcm http://localhost:8042/instances```
-c. dicomweb:```curl -X POST http://localhost:8042/dicom-web/studies -H "Content-Type: application/dicom" --data-binary @test.dcm```
-2. Get study list
-```dicomweb_client --url http://localhost:5985 search studies```
 
-We test with a Python implementation dicomweb_client.
+1. Start the services:
+```bash
+docker-compose up -d
+```
 
-3. View the file in the MinIO web interface
-```http://localhost:9001/```
+2. Upload a DICOM file using one of these methods:
+   - Using DICOMweb (STOW-RS):
+   ```bash
+   curl -X POST http://localhost:8042/dicom-web/studies -H "Content-Type: application/dicom" --data-binary @test.dcm
+   ```
+   - Using Orthanc's API:
+   ```bash
+   curl -X POST -H "Content-Type: application/dicom" --data-binary @test.dcm http://localhost:8042/instances
+   ```
 
-4. View the file in the OHIF viewer
-```http://localhost:8080/```
-
-### Files to edit
-- development.js.example
-- .env
+3. View uploaded studies:
+   - OHIF Viewer: http://localhost:3000
+   - Orthanc Explorer: http://localhost:8042
+   - MinIO Console: http://localhost:9001 (login with credentials from .env file)
 
 ## Architecture
 
-1. **DICOM Web Server**: 
-   - Runs on Node.js 20.x LTS and exposes port 5001
-   - Handles DICOM file storage and retrieval requests
-   - Web interface accessible via port 8080 (OHIF viewer)
-   - DIMSE port available on 8888
+1. **Orthanc DICOM Server**: 
+   - Core DICOM server with DICOMweb support
+   - Web interface accessible via port 8042
+   - Features enabled:
+     - DICOMweb Plugin
+     - OHIF Plugin
+     - CORS support
+     - S3 storage integration with MinIO
+   - SQLite database for metadata storage
 
-2. **SQLite**:
-   - Used as the database server to store metadata
-
-3. **MinIO**:
+2. **MinIO**:
    - Object storage server for DICOM files
-   - Accessible via ports:
+   - Ports:
      - 9000: API endpoint
      - 9001: Web console
    - Configured using environment variables for credentials
-   - Data persistence through volume mounting at /data
-   - Includes health checking every 30 seconds
+   - Data persistence through volume mounting at ./dicom-data
 
-4. **DICOM Listener**:
-   - Based on darthunix/dcmtk Docker image
-   - Listens on port 32773 (mapped to internal port 104)
-   - Configured with AE Title: INTELPIXEL
-   - Stores received files in customer-specific upload directory
-   - Automatically adds .dcm extension to received files
+3. **OHIF Viewer**:
+   - Zero-footprint DICOM viewer
+   - Accessible on port 3000
+   - Custom configuration via ohif.js
+   - Integrated with Orthanc's DICOMweb endpoints
 
-5. **Storage Structure**:
-   - Customer-specific storage organization
-   - Separate upload directories for each customer
-   - Ignores .dcm files and customer directories in version control
+4. **Nginx**:
+   - Reverse proxy for the web services
+   - Handles routing and load balancing
+   - Accessible on port 3080
 
-6. **Docker and Docker Compose**:
-   - Multi-container setup with custom networking
-   - All services connected through single network
-   - Volume mappings for persistent storage:
-     - DICOM data: ./dicom_data:/app/data
-     - Customer uploads: ./customer/${CUSTOMER}/uploads:/dcmfiles
-     - MinIO storage: ./customer/${CUSTOMER}:/data
+## Configuration Files
+- `.env`: Environment variables for MinIO credentials
+- `nginx.conf`: Nginx reverse proxy configuration
+- `ohif.js`: OHIF viewer configuration
+- `docker-compose.yml`: Service orchestration
+
+## Storage Structure
+- `dicom-data/`: MinIO storage directory
+- `orthanc-sqlite-storage`: Docker volume for Orthanc's SQLite database
 
 ## References
 - https://github.com/aws-samples/dicomweb-wado-qido-stow-serverless
-- https://github.com/knopkem/dicomweb-pacs
+- https://book.orthanc-server.com/
+- https://docs.ohif.org/
