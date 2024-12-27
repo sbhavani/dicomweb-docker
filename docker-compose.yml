@@ -1,57 +1,52 @@
 services:
-  dicomweb:
-    build: .
-    ports:
-      - "${DICOM_WEB_PORT}:${DICOM_WEB_PORT}"  # OHIF viewer web interface
-      - "${DICOM_SERVER_PORT}:${DICOM_SERVER_PORT}"  # DICOM DIMSE port
-    command: npx dicomweb-pacs
-    environment:
-      - AE_TITLE=${DICOM_AE_TITLE}
-      - HOSTNAME=dicomweb
-      - DICOM_SERVER_PORT=${DICOM_SERVER_PORT}
-      - DICOM_SERVER_HOST=${DICOM_SERVER_HOST}
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "${DICOM_SERVER_PORT}"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    volumes:
-      - ./dicom_data:/app/data  # For persistent storage
-    networks:
-      intelpixel:
-        aliases:
-          - dicom
-  dicomlistener:
-    image: darthunix/dcmtk:latest
-    volumes:
-      - ./customer/${CUSTOMER}/uploads:/dcmfiles
-    ports:
-      - "32773:104"
-    command: storescp 104 -v -aet INTELPIXEL --output-directory /dcmfiles -fe .dcm +xa
-    networks:
-      - intelpixel
-    depends_on:
-      - minio
+  # dicomlistener:
+  #   image: darthunix/dcmtk:latest
+  #   volumes:
+  #     - ./customer/${CUSTOMER}/uploads:/dcmfiles
+  #   ports:
+  #     - "32773:104"
+  #   command: >
+  #     storescp 104 
+  #     -v 
+  #     -aet INTELPIXEL 
+  #     --output-directory /dcmfiles 
+  #     -fe .dcm 
+  #     +xa
+  #   networks:
+  #     - default
+  orthanc:
+      image: orthancteam/orthanc:latest
+      ports: [8042:8042]
+      environment:
+          - ORTHANC__NAME=ORTHANC Minio demo
+          - ORTHANC__AWS_S3_STORAGE__BUCKET_NAME=orthanc
+          - ORTHANC__AWS_S3_STORAGE__REGION=us-east-1
+          - ORTHANC__AWS_S3_STORAGE__ACCESS_KEY=${MINIO_ACCESS_KEY}
+          - ORTHANC__AWS_S3_STORAGE__SECRET_KEY=${MINIO_SECRET_KEY}
+          - ORTHANC__AWS_S3_STORAGE__ENDPOINT=http://minio:9000
+          - ORTHANC__AWS_S3_STORAGE__VIRTUAL_ADDRESSING=false
+          # - ORTHANC__AWS_S3_STORAGE__HYBRID_MODE=WriteToObjectStorage
+          # - ORTHANC__AWS_S3_STORAGE__HYBRID_MODE=WriteToFileSystem
+          - ORTHANC__AUTHENTICATION_ENABLED=false
+          - ORTHANC__DICOM_SERVER_ENABLED=false
+          - VERBOSE_ENABLED=true
+          - VERBOSE_STARTUP=true
+      volumes:
+          - orthanc-sqlite-storage:/var/lib/orthanc/db
   minio:
-    image: quay.io/minio/minio:latest
-    volumes:
-      - ./customer/${CUSTOMER}:/data
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    networks:
-      - intelpixel
-
+      image: minio/minio:latest
+      ports:
+          - "9000:9000"  # API port
+          - "9001:9001"  # Console port
+      environment:
+          - MINIO_REGION=us-east-1
+          - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+          - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+      volumes:
+          - ./dicom-data:/data
+      entrypoint: sh
+      command: -c 'mkdir -p /data/orthanc && /usr/bin/docker-entrypoint.sh server /data --console-address ":9001"'
+volumes:
+    orthanc-sqlite-storage:
 networks:
-  intelpixel:
-    name: intelpixel
+  default:

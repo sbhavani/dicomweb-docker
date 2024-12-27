@@ -7,9 +7,10 @@ This project is a DICOM web server using Node.js, SQLite and MinIO to store and 
 The architecture provides a scalable DICOM management system with clear separation of concerns between file storage, metadata management, and DICOM communication protocols.
 
 ## Quickstart
-1. Upload a DICOM file to the server
-```dcmsend -v localhost 32773 -aec INTELPIXEL -aet ASTER +r +sd -nh test.dcm```
-
+1. Upload a DICOM file
+a. dcmtk:```dcmsend -v localhost 32773 -aec INTELPIXEL -aet ASTER +r +sd -nh test.dcm```
+b. orthanc:```curl -X POST -H "Content-Type: application/dicom" --data-binary @test.dcm http://localhost:8042/instances```
+c. dicomweb:```curl -X POST http://localhost:8042/dicom-web/studies -H "Content-Type: application/dicom" --data-binary @test.dcm```
 2. Get study list
 ```dicomweb_client --url http://localhost:5985 search studies```
 
