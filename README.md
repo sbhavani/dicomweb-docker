@@ -69,6 +69,11 @@ docker-compose up -d
 - `dicom-data/`: MinIO storage directory
 - `orthanc-sqlite-storage`: Docker volume for Orthanc's SQLite database
 
+## Roadmap
+- [ ] Add support for Caddy as reverse proxy
+- [ ] Integrate with a PACS
+- [ ] Add support for DICOMweb client in OHIF Viewer
+
 ## References
 - https://github.com/aws-samples/dicomweb-wado-qido-stow-serverless
 - https://book.orthanc-server.com/
