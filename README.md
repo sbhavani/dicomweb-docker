@@ -4,7 +4,7 @@
 
 This project provides a complete DICOM web server setup using Orthanc as the DICOM server, MinIO for object storage, and OHIF for web-based DICOM viewing.
 
-The architecture provides a scalable DICOM management system with clear separation of concerns between file storage, metadata management, and DICOM/DICOMweb protocols.
+This connects to the frontend built on Next.js with Postgres.
 
 ## Quickstart
 
