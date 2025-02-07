@@ -41,7 +41,7 @@ docker-compose up -d
    - SQLite database for metadata storage
 
 2. **MinIO**:
-   - Object storage server for DICOM files
+   - Object storage server for DICOM files / can be replaced with S3-compatible store
    - Ports:
      - 9000: API endpoint
      - 9001: Web console
@@ -58,9 +58,14 @@ docker-compose up -d
    - Reverse proxy for the web services
    - Handles routing and load balancing
    - Accessible on port 3080
+  
+4. **Frontend**:
+   - Includes patient study list and ability to add routes/locations
+   - Handles user and device management
+   - Built using Next.js and Postgres
 
 ## Configuration Files
-- `.env`: Environment variables for MinIO credentials
+- `.env`: Environment variables for credentials
 - `nginx.conf`: Nginx reverse proxy configuration
 - `ohif.js`: OHIF viewer configuration
 - `docker-compose.yml`: Service orchestration
@@ -71,8 +76,8 @@ docker-compose up -d
 
 ## Roadmap
 - [ ] Add support for Caddy as reverse proxy
-- [ ] Integrate with a PACS
-- [ ] Add support for DICOMweb client in OHIF Viewer
+- [ ] Integrate with EHR
+- [ ] Add support for DICOMweb client
 
 ## References
 - https://github.com/aws-samples/dicomweb-wado-qido-stow-serverless
