@@ -14,63 +14,52 @@ services:
       +xa
     networks:
       - default
+
   orthanc:
-      image: orthancteam/orthanc:latest
-      ports: [8042:8042]
-      environment:
-          - VERBOSE_ENABLED=true
-          - VERBOSE_STARTUP=true
-          - DICOM_WEB_PLUGIN_ENABLED=true
-          - OHIF_PLUGIN_ENABLED=true
-          - ORTHANC__CORS_ENABLED=true
-          - ORTHANC__DICOM_WEB_ENABLED=true
-          - ORTHANC__DICOM_SERVER_ENABLED=true
-          - ORTHANC__AUTHENTICATION_ENABLED=false
-          - ORTHANC__NAME=ORTHANC
-          - ORTHANC__CORS_ALLOWED_ORIGINS=http://localhost:3000
-          - ORTHANC__CORS_ALLOWED_METHODS=GET, POST, PUT, DELETE, OPTIONS
-          - ORTHANC__CORS_ALLOWED_HEADERS=Content-Type, Authorization
-          - ORTHANC__CORS_CREDENTIALS=true
-          - ORTHANC__AWS_S3_STORAGE__BUCKET_NAME=orthanc
-          - ORTHANC__AWS_S3_STORAGE__REGION=us-east-1
-          - ORTHANC__AWS_S3_STORAGE__ACCESS_KEY=${MINIO_ACCESS_KEY}
-          - ORTHANC__AWS_S3_STORAGE__SECRET_KEY=${MINIO_SECRET_KEY}
-          - ORTHANC__AWS_S3_STORAGE__ENDPOINT=http://minio:9000
-          - ORTHANC__AWS_S3_STORAGE__VIRTUAL_ADDRESSING=false
-      volumes:
-          - orthanc-sqlite-storage:/var/lib/orthanc/db
+    image: orthancteam/orthanc:latest
+    ports: [8042:8042]
+    env_file:
+      - .env
+    volumes:
+      - orthanc-sqlite-storage:/var/lib/orthanc/db
+    depends_on:
+      - minio
+
   minio:
-      image: minio/minio:latest
-      ports:
-          - "9000:9000"  # API port
-          - "9001:9001"  # Console port
-      environment:
-          - MINIO_REGION=us-east-1
-          - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
-          - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
-      volumes:
-          - ./dicom-data:/data
-      entrypoint: sh
-      command: -c 'mkdir -p /data/orthanc && /usr/bin/docker-entrypoint.sh server /data --console-address ":9001"'
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    env_file:
+      - .env
+    volumes:
+      - minio-data:/data
+    entrypoint: sh
+    command: -c 'mkdir -p /data/orthanc && /usr/bin/docker-entrypoint.sh server /data --console-address ":9001"'
+
   ohif:
-      image: ohif/app:latest
-      ports:
-          - "8080:80"
-      volumes:
-          - ./ohif.js:/usr/share/nginx/html/app-config.js
-      depends_on:
-          - orthanc
+    image: ohif/app:latest
+    ports:
+      - "8080:80"
+    volumes:
+      - ./ohif.js:/usr/share/nginx/html/app-config.js
+    depends_on:
+      - orthanc
+
   nginx:
-      image: nginx:latest
-      ports:
-          - "3080:80"
-      volumes:
-          - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      depends_on:
-          - orthanc
-          - ohif
+    image: nginx:latest
+    ports:
+      - "3080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - orthanc
+      - ohif
 
 volumes:
-    orthanc-sqlite-storage:
+  orthanc-sqlite-storage:
+  minio-data:
+
 networks:
   default:
+    driver: bridge 
