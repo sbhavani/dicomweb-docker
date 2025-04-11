@@ -1,6 +1,7 @@
 services:
   dicomlistener:
     image: darthunix/dcmtk:latest
+    container_name: dicomlistener
     volumes:
       - ./customer/${CUSTOMER}/uploads:/dcmfiles
     ports:
@@ -13,10 +14,11 @@ services:
       -fe .dcm 
       +xa
     networks:
-      - default
+      - dicom_network
 
   orthanc:
     image: orthancteam/orthanc:latest
+    container_name: orthanc
     ports: [8042:8042]
     env_file:
       - .env
@@ -24,30 +26,41 @@ services:
       - orthanc-sqlite-storage:/var/lib/orthanc/db
     depends_on:
       - minio
+    networks:
+      - dicom_network
 
   minio:
     image: minio/minio:latest
+    container_name: minio
+    hostname: minio
     ports:
       - "9000:9000"
       - "9001:9001"
-    env_file:
-      - .env
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      - MINIO_REGION=us-east-1
     volumes:
       - minio-data:/data
-    entrypoint: sh
-    command: -c 'mkdir -p /data/orthanc && /usr/bin/docker-entrypoint.sh server /data --console-address ":9001"'
+    command: server /data --console-address ":9001"
+    networks:
+      - dicom_network
 
   ohif:
     image: ohif/app:latest
+    container_name: ohif
     ports:
       - "8080:80"
     volumes:
       - ./ohif.js:/usr/share/nginx/html/app-config.js
     depends_on:
       - orthanc
+    networks:
+      - dicom_network
 
   nginx:
     image: nginx:latest
+    container_name: nginx
     ports:
       - "3080:80"
     volumes:
@@ -55,11 +68,13 @@ services:
     depends_on:
       - orthanc
       - ohif
+    networks:
+      - dicom_network
 
 volumes:
   orthanc-sqlite-storage:
   minio-data:
 
 networks:
-  default:
+  dicom_network:
     driver: bridge 

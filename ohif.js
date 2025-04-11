@@ -8,6 +8,9 @@ window.config = {
   showLoadingIndicator: true,
   strictZSpacingForVolumeViewport: true,
   maxNumberOfWebWorkers: 3,
+  investigationalUseDialog: {
+    option: 'never'
+  },
   cornerstoneOptions: {
     useWebWorkers: true,
     maxWebWorkers: 3,
@@ -73,22 +76,26 @@ window.config = {
       return React.createElement('div', {
         className: 'custom-logo'
       }, [
-        React.createElement('img', {
-          src: 'https://via.placeholder.com/200x50?text=Your+Logo',
-          alt: 'Your Logo',
-          width: '200px'
-        }),
+        React.createElement('span', {
+          style: {
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '24px'
+          }
+        }, 'InnovationDX')
       ]);
     },
     createLogoComponentFnSplash: function(React) {
       return React.createElement('div', {
         className: 'custom-logo-splash'
       }, [
-        React.createElement('img', {
-          src: 'https://via.placeholder.com/300x100?text=Your+Logo',
-          alt: 'Your Logo',
-          width: '300px'
-        }),
+        React.createElement('span', {
+          style: {
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '36px'
+          }
+        }, 'InnovationDX')
       ]);
     },
     showUserInformationModal: false
