@@ -3,6 +3,23 @@ window.config = {
   showStudyList: true,
   extensions: [],
   modes: [],
+  showWarningMessageForCrossOrigin: false,
+  showCPUFallbackMessage: false,
+  showLoadingIndicator: true,
+  strictZSpacingForVolumeViewport: true,
+  maxNumberOfWebWorkers: 3,
+  cornerstoneOptions: {
+    useWebWorkers: true,
+    maxWebWorkers: 3,
+    startWebWorkersOnDemand: true,
+    taskConfiguration: {
+      decodeTask: {
+        initializeCodecsOnStartup: true,
+        usePDFJS: false,
+        strict: false,
+      },
+    },
+  },
   dataSources: [
     {
       friendlyName: 'Orthanc Server',
@@ -51,4 +68,44 @@ window.config = {
     { commandName: 'nextImage', label: 'Next Image', keys: ['down'] },
     { commandName: 'previousImage', label: 'Previous Image', keys: ['up'] },
   ],
+  whiteLabeling: {
+    createLogoComponentFn: function(React) {
+      return React.createElement('div', {
+        className: 'custom-logo'
+      }, [
+        React.createElement('img', {
+          src: 'https://via.placeholder.com/200x50?text=Your+Logo',
+          alt: 'Your Logo',
+          width: '200px'
+        }),
+      ]);
+    },
+    createLogoComponentFnSplash: function(React) {
+      return React.createElement('div', {
+        className: 'custom-logo-splash'
+      }, [
+        React.createElement('img', {
+          src: 'https://via.placeholder.com/300x100?text=Your+Logo',
+          alt: 'Your Logo',
+          width: '300px'
+        }),
+      ]);
+    },
+    showUserInformationModal: false
+  },
+  theme: {
+    primary: '#0066CC',
+    secondary: '#1A1A1A',
+    accent: '#3B82F6',
+    error: '#EF4444',
+    info: '#3B82F6',
+    success: '#22C55E',
+    warning: '#F59E0B',
+    background: '#FFFFFF',
+    text: '#1A1A1A',
+    textSecondary: '#4B5563',
+    border: '#E5E7EB',
+    hover: '#F3F4F6',
+    active: '#EFF6FF',
+  },
 }; 

@@ -6,6 +6,32 @@ This project provides a complete DICOM web server setup using Orthanc as the DIC
 
 This connects to the frontend built on Next.js with Postgres.
 
+## Docker Setup for Windows
+
+Before running this project on Windows, you'll need to set up Docker and Docker Compose:
+
+1. **Install Docker Desktop for Windows**:
+   - Download Docker Desktop from [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
+   - Run the installer and follow the setup wizard
+   - Ensure WSL 2 (Windows Subsystem for Linux) is installed and configured
+   - Restart your computer after installation
+
+2. **Verify Installation**:
+   - Open PowerShell or Command Prompt
+   - Run `docker --version` to verify Docker installation
+   - Run `docker-compose --version` to verify Docker Compose installation
+
+3. **Configure Docker Desktop**:
+   - Open Docker Desktop
+   - Go to Settings > Resources
+   - Allocate at least 4GB of RAM and 2 CPU cores
+   - Enable WSL 2 integration if using WSL
+
+4. **Windows-specific Considerations**:
+   - Ensure your antivirus software doesn't block Docker
+   - If using Windows 10 Home, you'll need to install WSL 2 first
+   - For better performance, consider using WSL 2 backend instead of Hyper-V
+
 ## Quickstart
 
 1. Start the services:

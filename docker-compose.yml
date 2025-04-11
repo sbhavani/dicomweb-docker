@@ -1,19 +1,19 @@
 services:
-  # dicomlistener:
-  #   image: darthunix/dcmtk:latest
-  #   volumes:
-  #     - ./customer/${CUSTOMER}/uploads:/dcmfiles
-  #   ports:
-  #     - "32773:104"
-  #   command: >
-  #     storescp 104 
-  #     -v 
-  #     -aet INTELPIXEL 
-  #     --output-directory /dcmfiles 
-  #     -fe .dcm 
-  #     +xa
-  #   networks:
-  #     - default
+  dicomlistener:
+    image: darthunix/dcmtk:latest
+    volumes:
+      - ./customer/${CUSTOMER}/uploads:/dcmfiles
+    ports:
+      - "32773:104"
+    command: >
+      storescp 104 
+      -v 
+      -aet INNOVATIONDX 
+      --output-directory /dicom-data/input
+      -fe .dcm 
+      +xa
+    networks:
+      - default
   orthanc:
       image: orthancteam/orthanc:latest
       ports: [8042:8042]
@@ -27,6 +27,10 @@ services:
           - ORTHANC__DICOM_SERVER_ENABLED=true
           - ORTHANC__AUTHENTICATION_ENABLED=false
           - ORTHANC__NAME=ORTHANC
+          - ORTHANC__CORS_ALLOWED_ORIGINS=http://localhost:3000
+          - ORTHANC__CORS_ALLOWED_METHODS=GET, POST, PUT, DELETE, OPTIONS
+          - ORTHANC__CORS_ALLOWED_HEADERS=Content-Type, Authorization
+          - ORTHANC__CORS_CREDENTIALS=true
           - ORTHANC__AWS_S3_STORAGE__BUCKET_NAME=orthanc
           - ORTHANC__AWS_S3_STORAGE__REGION=us-east-1
           - ORTHANC__AWS_S3_STORAGE__ACCESS_KEY=${MINIO_ACCESS_KEY}
@@ -51,7 +55,7 @@ services:
   ohif:
       image: ohif/app:latest
       ports:
-          - "3000:80"
+          - "8080:80"
       volumes:
           - ./ohif.js:/usr/share/nginx/html/app-config.js
       depends_on:
@@ -65,6 +69,7 @@ services:
       depends_on:
           - orthanc
           - ohif
+
 volumes:
     orthanc-sqlite-storage:
 networks:
