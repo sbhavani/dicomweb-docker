@@ -1,8 +1,12 @@
-# DICOM Web Server with Orthanc, MinIO and OHIF Viewer
+# DICOM Web Server with Orthanc and OHIF Viewer
 
 ## Overview
 
-This project provides a complete DICOM web server setup using Orthanc as the DICOM server, MinIO for object storage, and OHIF for web-based DICOM viewing.
+This project provides a complete DICOM web server setup using:
+- Orthanc as the DICOM server with DICOMweb support
+- MinIO for object storage
+- OHIF for web-based DICOM viewing
+- DICOM Listener (storescp) for automatic DICOM file processing
 
 ## Docker Setup
 
@@ -32,8 +36,8 @@ cp .env.example .env
 
 2. Edit the `.env` file with your desired credentials:
 ```
-MINIO_ROOT_USER=your_minio_username
-MINIO_ROOT_PASSWORD=your_minio_password
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin
 CUSTOMER=your_customer_name
 ```
 
@@ -68,8 +72,9 @@ docker-compose up -d
 
 1. **DICOM Listener (storescp)**:
    - Listens on port 104 (mapped to 32773)
-   - Automatically processes DICOM files from upload directory
    - Uses dcmtk for DICOM operations
+   - Automatically processes DICOM files from ./customer/${CUSTOMER}/uploads
+   - AE Title: INNOVATIONDX
 
 2. **Orthanc DICOM Server**: 
    - Core DICOM server with DICOMweb support
@@ -79,15 +84,17 @@ docker-compose up -d
      - OHIF Plugin
      - CORS support
      - S3 storage integration with MinIO
-   - SQLite database for metadata storage
+   - SQLite database for metadata storage (persisted in orthanc-sqlite-storage volume)
 
 3. **MinIO**:
    - Object storage server for DICOM files
    - Ports:
      - 9000: API endpoint
      - 9001: Web console
-   - Configured using environment variables for credentials
-   - Data persistence through volume mounting
+   - Default credentials:
+     - Username: minioadmin
+     - Password: minioadmin
+   - Data persistence through minio-data volume
 
 4. **OHIF Viewer**:
    - Zero-footprint DICOM viewer
@@ -99,6 +106,7 @@ docker-compose up -d
    - Reverse proxy for the web services
    - Handles routing and load balancing
    - Accessible on port 3080
+   - Configuration in nginx.conf
 
 ## Configuration Files
 - `.env`: Environment variables for credentials
@@ -111,6 +119,13 @@ docker-compose up -d
 - `./customer/${CUSTOMER}/uploads`: Directory for DICOM file uploads
 - `minio-data`: Docker volume for MinIO storage
 - `orthanc-sqlite-storage`: Docker volume for Orthanc's SQLite database
+- `./dicom-data/input`: Directory for processed DICOM files
+
+## Future Roadmap
+- Add DICOM Listener (storescp) for automatic DICOM file processing
+- Add Prometheus and Grafana for monitoring
+- Add Authentication and proxy with Caddy/nginx
+- Add DICOM Gateway frontend
 
 ## References
 - https://github.com/aws-samples/dicomweb-wado-qido-stow-serverless
