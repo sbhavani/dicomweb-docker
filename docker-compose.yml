@@ -1,9 +1,11 @@
 services:
   # dicomlistener:
-  #   image: dcmtk/dcmtk:latest
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile.dcmtk
   #   container_name: dicomlistener
   #   volumes:
-  #     - ./customer/${CUSTOMER}/uploads:/dcmfiles
+  #     - ./volumes/customer/${CUSTOMER}/uploads:/dcmfiles
   #   ports:
   #     - "32773:104"
   #   command: >
@@ -83,17 +85,10 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command: |
       "
-      # Configure MinIO client
-      mc alias set myminio http://minio:9000 minioadmin minioadmin
-      
-      # Create bucket if it doesn't exist
-      mc mb myminio/orthanc --ignore-existing
-      
-      # Set bucket policy to public read
-      mc policy set download myminio/orthanc
-      
-      echo 'MinIO initialization complete!'
+      ./scripts/init-minio.sh
       "
+    volumes:
+      - ./scripts:/scripts
     networks:
       - dicom_network
 
@@ -103,7 +98,7 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./ohif.js:/usr/share/nginx/html/app-config.js
+      - ./config/ohif/ohif.js:/usr/share/nginx/html/app-config.js
     networks:
       - dicom_network
 
@@ -113,7 +108,7 @@ services:
     ports:
       - "3080:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./config/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       ohif:
         condition: service_started
@@ -124,7 +119,17 @@ services:
 
 volumes:
   orthanc-sqlite-storage:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/orthanc-db
   minio-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./volumes/minio-data
 
 networks:
   dicom_network:

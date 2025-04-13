@@ -8,6 +8,29 @@ This project provides a complete DICOM web server setup using:
 - OHIF for web-based DICOM viewing
 - DICOM Listener (storescp) for automatic DICOM file processing
 
+## Project Structure
+
+```
+dicomweb-docker/
+├── config/                  # Configuration files
+│   ├── nginx/               # Nginx configuration
+│   ├── ohif/                # OHIF Viewer configuration
+│   ├── orthanc/             # Orthanc configuration
+│   └── minio/               # MinIO configuration
+├── docker/                  # Custom Dockerfiles
+├── scripts/                 # Helper scripts
+├── volumes/                 # Persistent data volumes
+│   ├── customer/            # Customer data
+│   ├── minio-data/          # MinIO data
+│   └── orthanc-db/          # Orthanc SQLite database
+├── test/                    # Test files and resources
+│   └── dicom/               # Test DICOM files
+├── .env                     # Environment variables
+├── .env.example             # Example environment file
+├── docker-compose.yml       # Docker service orchestration
+└── README.md                # Documentation
+```
+
 ## Docker Setup
 
 Before running this project, you'll need to set up Docker and Docker Compose:
@@ -111,15 +134,14 @@ docker-compose up -d
 ## Configuration Files
 - `.env`: Environment variables for credentials
 - `.env.example`: Template for environment variables
-- `nginx.conf`: Nginx reverse proxy configuration
-- `ohif.js`: OHIF viewer configuration
+- `config/nginx/nginx.conf`: Nginx reverse proxy configuration
+- `config/ohif/ohif.js`: OHIF viewer configuration
 - `docker-compose.yml`: Service orchestration
 
 ## Storage Structure
-- `./customer/${CUSTOMER}/uploads`: Directory for DICOM file uploads
-- `minio-data`: Docker volume for MinIO storage
-- `orthanc-sqlite-storage`: Docker volume for Orthanc's SQLite database
-- `./dicom-data/input`: Directory for processed DICOM files
+- `volumes/customer/${CUSTOMER}/uploads`: Directory for DICOM file uploads
+- `volumes/minio-data`: Docker volume for MinIO storage
+- `volumes/orthanc-db`: Docker volume for Orthanc's SQLite database
 
 ## Future Roadmap
 - Add DICOM Listener (storescp) for automatic DICOM file processing
