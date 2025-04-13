@@ -5,3 +5,4 @@ dicom-data/
 test/
 public/
 ohif-config/
+volumes/

@@ -1,10 +1,8 @@
 #!/bin/bash
 
-# Wait for MinIO to be ready
-until curl -s -f -o /dev/null "http://localhost:9000/minio/health/live"; do
-  echo "Waiting for MinIO to be ready..."
-  sleep 1
-done
+# Wait for MinIO to be ready (fixed wait instead of health check)
+echo "Waiting for MinIO to start up (sleeping for 5 seconds)..."
+sleep 5
 
 # Configure MinIO client
 mc alias set myminio http://localhost:9000 minioadmin minioadmin
